@@ -1,0 +1,46 @@
+#app {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  width: 90%;
+  max-width: 1200px;
+  margin: 20px auto;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.game-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1e293b;
+  color: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.game-card .team span{
+  background-color: #0f172a;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #38bdf8;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.game-card .status{
+  font-family: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  padding: 0 8px;
+}
+
+@media (max-width: 380px) {
+  .game-card{
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}

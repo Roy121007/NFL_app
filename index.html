@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="widht=device-width, initial-scale=1.0" />
+    <title>NFL Pro-app</title>
+    <link rel="stylesheet" href="./src/styles/base.css" />
+    <link rel="stylesheet" href="./src/styles/navbar.css" />
+    <link rel="stylesheet" href="./src/styles/cards.css" />
+    <link rel="stylesheet" href="./src/styles/modal.css" />
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="nav-container">
+
+        <div class="logo">
+          <img src="https://a.espncdn.com/i/teamlogos/nfl/500/nfl.png" alt="NFL Logo" calss="nfl-logo-img" />
+          <span class=""logo-text>SCOREBOARD</span>
+        </div>
+
+        <div class="week-picker">
+          <button id="prev-week-btn" class="week-arrow-btn" aria-label="Semana anterior">&lt;</button>
+          <span id="current-week-label" class="week-label">Cargando...</span>
+          <button id="next-week-btn" class="week-arrow-btn" aria-label="Semana siguiente">&gt;</button>
+
+          <!-- Selector de equipo fav, aqui se va a llenar automatico-->
+          <div class="theme-selector-container">
+            <label for="fav-team-select">Mi Equipo:</label>
+            <select id="fav-team-select" class="fav-team-select">
+              <option value="DEFAULT">NFL (Predeterminado)</option>
+              <!-- Se va a llenar solo -->
+            </select>
+          </div>
+
+          <!-- Pestañas de vista principal -->
+          <ul
+        </div>
+      </div>
+    </nav>
+  </body>
+</html>
