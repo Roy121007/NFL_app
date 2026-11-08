@@ -293,6 +293,10 @@ async function cargarPartidosPorSemana(semana = null, esAutoRefresh = false) {
 // ==========================================
 setInterval(() => {
   cargarPartidosPorSemana(semanaActual, true);
+
+  if (pestañaProActual === 'lideres' && lideresVistaActual === 'week') {
+    cargarLideresTemporada(semanaActual, 'week');
+  }
 }, 30000);
 
 // ==========================================
