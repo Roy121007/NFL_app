@@ -14,6 +14,7 @@ let todosLosPartidos = [];
 let filtroEstadoActual = 'ALL';
 let terminoBusqueda = '';
 let semanaActual = null;
+let semanaActualDelCalendario = null;
 let pestañaProActual = 'partidos';
 let standingsViewMode = 'division'; // 'division' o 'conference'
 let standingDataCache = null;
@@ -270,6 +271,9 @@ async function cargarPartidosPorSemana(semana = null, esAutoRefresh = false) {
 
   const respuesta = await obtenerPartidosNFL(semana);
   semanaActual = respuesta.week;
+  if (semana === null || semana === undefined) {
+    semanaActualDelCalendario = respuesta.week;
+  }
   todosLosPartidos = respuesta.games;
 
   // Actualizar la vista activa según la pestaña actual
@@ -673,13 +677,32 @@ async function obtenerLideresSemana(semana) {
   return categorias;
 }
 
+function bindLeaderScopeButtons(container) {
+  if (!container || container.dataset.leaderScopeBound === 'true') return;
+
+  container.addEventListener('click', (event) => {
+    const button = event.target.closest('.leader-scope-btn');
+    if (!button) return;
+    lideresVistaActual = button.dataset.scope;
+    cargarLideresTemporada(semanaActual, lideresVistaActual);
+  });
+
+  container.dataset.leaderScopeBound = 'true';
+}
+
 async function cargarLideresTemporada(semana = semanaActual, vista = lideresVistaActual) {
   const container = document.getElementById('lideres-container');
   if (!container) return;
 
+  bindLeaderScopeButtons(container);
+
   const semanaSeleccionada = Number.isFinite(Number(semana)) ? Number(semana) : (semanaActual ?? 1);
   const esVistaSemana = vista === 'week';
-  const currentWeekNumber = Number.isFinite(Number(semanaActual)) ? Number(semanaActual) : 1;
+  const currentWeekNumber = Number.isFinite(Number(semanaActualDelCalendario))
+    ? Number(semanaActualDelCalendario)
+    : Number.isFinite(Number(semanaActual))
+      ? Number(semanaActual)
+      : 1;
   const esSemanaFutura = semanaSeleccionada > currentWeekNumber;
 
   if (esVistaSemana && esSemanaFutura) {
@@ -870,13 +893,7 @@ function renderizarCardsLideres(container, categorias, opts = {}) {
       </div>
     `;
     container.innerHTML = html;
-
-    container.querySelectorAll('.leader-scope-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        lideresVistaActual = btn.dataset.scope;
-        cargarLideresTemporada(semanaActual, lideresVistaActual);
-      });
-    });
+    bindLeaderScopeButtons(container);
     return;
   }
 
@@ -921,12 +938,7 @@ function renderizarCardsLideres(container, categorias, opts = {}) {
     lideresTemporadaCache = html;
   }
 
-  container.querySelectorAll('.leader-scope-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      lideresVistaActual = btn.dataset.scope;
-      cargarLideresTemporada(semanaActual, lideresVistaActual);
-    });
-  });
+  bindLeaderScopeButtons(container);
 }
 
 // ==========================================
