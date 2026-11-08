@@ -230,6 +230,8 @@ export function inicializarModal() {
           </tr>
         </tbody>
       </table>
+
+      <div id="player-stats-section" class="modal-player-stats-section"></div>
     `;
 
     // Animación suave de transición
@@ -241,6 +243,101 @@ export function inicializarModal() {
     if (game.id && (isLive || isFinal)) {
       enriquecerPlayByPlay(game.id);
     }
+  }
+
+  function obtenerJugadoresClave(teamStats) {
+    const stats = Array.isArray(teamStats?.statistics) ? teamStats.statistics : [];
+    const roles = [
+      { key: 'passing', label: 'QB' },
+      { key: 'rushing', label: 'RB' },
+      { key: 'receiving', label: 'WR' },
+      { key: 'defensive', label: 'DEF' }
+    ];
+
+    const jugadores = [];
+
+    roles.forEach(({ key, label }) => {
+      const grupo = stats.find(item => (item?.name || '').toLowerCase() === key);
+      const athleteEntry = grupo?.athletes?.[0];
+      const athlete = athleteEntry?.athlete;
+
+      if (!athlete) return;
+
+      const name = athlete.displayName || `${athlete.firstName || ''} ${athlete.lastName || ''}`.trim() || 'Jugador';
+      const headshot = athlete.headshot?.href || '';
+      const metricIndex = key === 'passing' || key === 'rushing' || key === 'receiving' ? 1 : 0;
+      const rawValue = athleteEntry?.stats?.[metricIndex] ?? '—';
+      const metricLabel = grupo?.labels?.[metricIndex] || '';
+      const value = rawValue && metricLabel ? `${rawValue} ${metricLabel}` : (rawValue || '—');
+
+      jugadores.push({
+        name,
+        role: label,
+        headshot,
+        value
+      });
+    });
+
+    return jugadores.slice(0, 4);
+  }
+
+  function renderizarEstadisticasJugadores(data) {
+    const section = document.getElementById('player-stats-section');
+    if (!section || !Array.isArray(data?.boxscore?.players) || data.boxscore.players.length === 0) {
+      if (section) section.innerHTML = '';
+      return;
+    }
+
+    const html = data.boxscore.players
+      .map((teamEntry) => {
+        const team = teamEntry?.team || {};
+        const teamName = team.displayName || team.name || 'Equipo';
+        const teamAbbr = team.abbreviation || team.shortDisplayName || teamName;
+        const logo = team.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png';
+        const jugadores = obtenerJugadoresClave(teamEntry);
+
+        if (!jugadores.length) return '';
+
+        const accent = team.color ? `#${team.color}` : 'var(--primary-theme)';
+
+        return `
+          <div class="player-team-card" style="--team-accent: ${accent};">
+            <div class="player-team-header">
+              <img src="${logo}" alt="${teamName}" class="player-team-logo" onerror="this.src='https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png'" />
+              <span>${teamName}</span>
+              <strong>${teamAbbr}</strong>
+            </div>
+            <div class="player-list">
+              ${jugadores.map((player) => `
+                <div class="player-stat-item">
+                  <div class="player-stat-avatar">
+                    ${player.headshot ? `<img src="${player.headshot}" alt="${player.name}" onerror="this.style.display='none'; this.parentElement.classList.add('fallback');" />` : '<span class="player-stat-fallback">${player.name.charAt(0)}</span>'}
+                  </div>
+                  <div class="player-stat-meta">
+                    <div class="player-stat-name">${player.name}</div>
+                    <div class="player-stat-role">${player.role}</div>
+                  </div>
+                  <div class="player-stat-value">${player.value}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      })
+      .filter(Boolean)
+      .join('');
+
+    if (!html) {
+      section.innerHTML = '';
+      return;
+    }
+
+    section.innerHTML = `
+      <div class="player-stats-header">
+        <span>Jugadores clave</span>
+      </div>
+      <div class="player-stats-grid">${html}</div>
+    `;
   }
 
   /**
@@ -272,6 +369,8 @@ export function inicializarModal() {
       if (currentDrive?.description && driveContainer && !driveContainer.innerHTML.trim()) {
         driveContainer.innerHTML = `<div class="pbp-drive"><strong>Serie ofensiva:</strong> ${currentDrive.description}</div>`;
       }
+
+      renderizarEstadisticasJugadores(data);
     } catch {
       // Si falla la consulta enriquecida, la información original del partido ya está visible
     }

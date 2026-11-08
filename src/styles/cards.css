@@ -290,10 +290,7 @@ body[data-theme="light"] .skeleton-box {
    ========================================== */
 .td-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -301,14 +298,27 @@ body[data-theme="light"] .skeleton-box {
   flex-direction: column;
   gap: 6px;
   border-radius: var(--radius);
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 28%, rgba(0,0,0,0.12) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14), inset 0 0 24px rgba(255,255,255,0.06), 0 0 26px rgba(0,0,0,0.12);
   transform: translateX(-100%);
   opacity: 0;
   pointer-events: none;
   transition: none;
+  overflow: hidden;
+}
+
+.td-overlay::before {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% -12%;
+  width: 38%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
+  transform: skewX(-18deg);
+  pointer-events: none;
 }
 
 .td-overlay.active {
-  animation: tdSlideIn 0.5s ease forwards, tdSlideOut 0.5s ease 4.5s forwards;
+  animation: tdSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, tdSlideOut 0.5s ease 4.5s forwards;
 }
 
 @keyframes tdSlideIn {
@@ -334,42 +344,49 @@ body[data-theme="light"] .skeleton-box {
 }
 
 .td-overlay .td-logo {
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.22));
+  position: relative;
+  z-index: 1;
 }
 
 .td-overlay .td-title {
-  font-size: 1.3rem;
+  position: relative;
+  z-index: 1;
+  font-size: 1.35rem;
   font-weight: 900;
-  color: #ffffff;
+  color: rgba(255,255,255,0.98);
   text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  letter-spacing: 0.18em;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .td-overlay .td-detail {
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.85);
+  position: relative;
+  z-index: 1;
+  font-size: 0.76rem;
+  color: rgba(255,255,255,0.9);
   text-align: center;
   max-width: 90%;
   line-height: 1.3;
+  letter-spacing: 0.02em;
 }
 
-/* Pulsing glow for touchdown */
-.td-overlay.active::before {
-  content: '';
+.td-overlay.active::after {
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: var(--radius);
+  box-shadow: inset 0 0 28px rgba(255,255,255,0.12);
   animation: tdGlow 1s ease-in-out 3 alternate;
   pointer-events: none;
 }
 
 @keyframes tdGlow {
-  from { box-shadow: inset 0 0 20px rgba(255,255,255,0.1); }
-  to { box-shadow: inset 0 0 40px rgba(255,255,255,0.25); }
+  from { box-shadow: inset 0 0 0 rgba(255,255,255,0.08), 0 0 0 rgba(255,255,255,0); }
+  to { box-shadow: inset 0 0 30px rgba(255,255,255,0.10), 0 0 16px rgba(255,255,255,0.08); }
 }
 
 /* ==========================================
