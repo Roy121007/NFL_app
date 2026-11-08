@@ -15,8 +15,8 @@
       <div class="nav-container">
 
         <div class="logo">
-          <img id="header-logo" src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" clasa="nfl-logo-img" />
-          <span class="" logo-text>SCOREBOARD</span>
+          <img id="header-logo" src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" class="nfl-logo-img" alt="NFL Logo" />
+          <span class="logo-text">SCOREBOARD</span>
         </div>
 
         <div class="week-picker">
@@ -28,10 +28,14 @@
           <!-- Selector de equipo fav, aqui se va a llenar automatico-->
         <div class="theme-selector-container">
             <label for="fav-team-select">Mi Equipo:</label>
-            <select id="fav-team-select" class="fav-team-select">
-              <option value="DEFAULT">NFL (Predeterminado)</option>
-              <!-- Se va a llenar solo -->
-            </select>
+            <div class="select-shell fav-team-shell">
+              <select id="fav-team-select" class="fav-team-select">
+                <option value="DEFAULT">NFL (Predeterminado)</option>
+                <!-- Se va a llenar solo -->
+              </select>
+            </div>
+            <!-- PRO 4: Toggle Modo Oscuro/Claro -->
+            <button id="theme-toggle-btn" class="theme-toggle-btn" title="Cambiar tema" aria-label="Cambiar modo oscuro/claro">🌙</button>
         </div>
 
           <!-- Pestañas de vista principal -->
@@ -42,8 +46,19 @@
 
       </div>
     </nav>
+
+    <!-- PRO 4: Pestañas de navegación Pro -->
+    <div class="pro-tabs-container" id="pro-tabs">
+      <button class="pro-tab active" data-tab="partidos">📺 Partidos</button>
+      <button class="pro-tab" data-tab="clasificaciones">🏆 Clasificaciones</button>
+      <button class="pro-tab" data-tab="lideres">⭐ Líderes de la Temporada</button>
+      <button class="pro-tab" data-tab="calendario">📅 Calendario por Equipo</button>
+      <button class="pro-tab" data-tab="multipantalla">📱 Multipantalla</button>
+      <button class="pro-tab redzone-tab" data-tab="redzone">🔴 MODO REDZONE</button>
+    </div>
+
     <!-- Barra de filtros de busqueda y header -->
-    <header class="sub-header">
+    <header class="sub-header" id="sub-header">
       <div class="header-container">
         <!-- Buscador de equipos -->
         <div class="search-box">
@@ -77,16 +92,55 @@
         </div>
       </section>
 
+      <!-- PRO 4: Vistas adicionales -->
+      <section id="clasificaciones-view" class="view-section">
+        <div id="clasificaciones-container" class="standings-container">
+          <!-- Clasificaciones AFC/NFC por división -->
+        </div>
+      </section>
+
+      <section id="lideres-view" class="view-section">
+        <div id="lideres-container" class="leaders-container">
+          <!-- Líderes estadísticos de la temporada -->
+        </div>
+      </section>
+
+      <section id="calendario-view" class="view-section">
+        <div id="calendario-container" class="schedule-container">
+          <!-- Calendario por equipo generado dinámicamente -->
+        </div>
+      </section>
+
+      <section id="multipantalla-view" class="view-section">
+        <div id="multipantalla-controls" class="multiscreen-controls">
+          <!-- Controles de selección de partidos -->
+        </div>
+        <div id="multipantalla-grid" class="multiscreen-grid">
+          <!-- Grid compacto de partidos seleccionados -->
+        </div>
+      </section>
+
+      <section id="redzone-view" class="view-section">
+        <div id="redzone-grid" class="games-grid">
+          <!-- Solo partidos en zona roja / crunch time -->
+        </div>
+      </section>
+
     </main>
 
     <!-- Modal de detalles del juego -->
-    <div id="game-modal" class="modal-backdrop hidden">
+    <div id="game-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Detalles del partido">
+      <!-- Navegación fluida Pro: Flechas laterales translúcidas -->
+      <button id="modal-prev-btn" class="modal-nav-arrow modal-prev" aria-label="Partido anterior" title="Partido anterior">&#10094;</button>
+
       <div class="modal-content">
-        <button id="close-modal-btn" class="close-modal">&times;</button>
+        <button id="close-modal-btn" class="close-modal" aria-label="Cerrar modal">&times;</button>
         <div id="modal-body">
           <!-- Los detalles por cuartos y stats del juego -->
         </div>
       </div>
+
+      <button id="modal-next-btn" class="modal-nav-arrow modal-next" aria-label="Partido siguiente" title="Partido siguiente">&#10095;</button>
     </div>
 
     <!-- Script principal -->

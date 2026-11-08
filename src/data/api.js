@@ -96,6 +96,17 @@ export async function obtenerPartidosNFL(week = null) {
       const homeQuarters = getLinescores(homeCompetitor);
       const defaultLogo = 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png';
 
+      // Scoring plays extraction
+      const scoringPlays = competition.scoringPlays || [];
+      const lastSP = scoringPlays.length > 0 ? scoringPlays[scoringPlays.length - 1] : null;
+
+      // Extracción de información de series (drives) y última jugada
+      const currentDrive = competition.drives?.current || 
+        (competition.drives?.previous?.length ? competition.drives.previous[competition.drives.previous.length - 1] : null);
+      const driveDescription = currentDrive?.description || currentDrive?.result || '';
+      const drivePlaysCount = currentDrive?.plays?.length || 0;
+      const driveYards = currentDrive?.yards ?? null;
+
       return {
         id: event.id,
         week: currentWeekNumber,
@@ -118,7 +129,44 @@ export async function obtenerPartidosNFL(week = null) {
           q2: [awayQuarters[1], homeQuarters[1]],
           q3: [awayQuarters[2], homeQuarters[2]],
           q4: [awayQuarters[3], homeQuarters[3]]
-        }
+        },
+
+        // Possession & Live situation data
+        possession: situation.possession || null,
+        downDistanceText: situation.downDistanceText || situation.shortDownDistanceText || '',
+        lastPlay: situation.lastPlay?.text || '',
+        driveDescription: driveDescription,
+        drivePlaysCount: drivePlaysCount,
+        driveYards: driveYards,
+        clock: event.status?.displayClock || '',
+        period: event.status?.period || 0,
+
+        // Team records
+        homeRecord: homeCompetitor.records?.[0]?.summary || '',
+        awayRecord: awayCompetitor.records?.[0]?.summary || '',
+
+        // Team colors (from API, as backup)
+        homeColor: homeCompetitor.team?.color ? '#' + homeCompetitor.team.color : null,
+        awayColor: awayCompetitor.team?.color ? '#' + awayCompetitor.team.color : null,
+        homeAltColor: homeCompetitor.team?.alternateColor ? '#' + homeCompetitor.team.alternateColor : null,
+        awayAltColor: awayCompetitor.team?.alternateColor ? '#' + awayCompetitor.team.alternateColor : null,
+
+        // Team IDs
+        homeTeamId: homeCompetitor.team?.id || '',
+        awayTeamId: awayCompetitor.team?.id || '',
+
+        // Scoring plays
+        lastScoringPlay: lastSP ? {
+          text: lastSP.text,
+          team: lastSP.team?.abbreviation,
+          type: lastSP.type?.text,
+          clock: lastSP.clock?.displayValue
+        } : null,
+        totalScoringPlays: scoringPlays.length,
+
+        // Full team display names
+        homeFullName: homeCompetitor.team?.displayName || homeCompetitor.team?.name || 'Local',
+        awayFullName: awayCompetitor.team?.displayName || awayCompetitor.team?.name || 'Visitante'
       };
     });
 

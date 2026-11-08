@@ -51,3 +51,42 @@ export const teams = {
   SF49ers: { name: 'San Francisco 49ers', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/sf.png', primaryColor: '#AA0000', secondaryColor: '#B3995D' },
   Seahawks: { name: 'Seattle Seahawks', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/sea.png', primaryColor: '#002244', secondaryColor: '#69BE28' }
 };
+
+/**
+ * Mapeo oficial de abreviaturas ESPN a las claves de equipos.
+ */
+export const teamAbbrevMap = {
+  BUF: 'Bills', MIA: 'Dolphins', NE: 'Patriots', NYJ: 'Jets',
+  BAL: 'Ravens', CIN: 'Bengals', CLE: 'Browns', PIT: 'Steelers',
+  HOU: 'Texans', IND: 'Colts', JAX: 'Jaguars', TEN: 'Titans',
+  DEN: 'Broncos', KC: 'Chiefs', LV: 'Raiders', LAC: 'Chargers',
+  DAL: 'Cowboys', NYG: 'Giants', PHI: 'Eagles', WSH: 'Commanders',
+  CHI: 'Bears', DET: 'Lions', GB: 'Packers', MIN: 'Vikings',
+  ATL: 'Falcons', CAR: 'Panthers', NO: 'Saints', TB: 'Buccaneers',
+  ARI: 'Cardinals', LAR: 'Rams', SF: 'SF49ers', SEA: 'Seahawks'
+};
+
+/**
+ * Busca de forma segura la información de un equipo por clave, abreviatura o nombre.
+ */
+export function buscarInfoEquipo(keyOrAbbrOrName) {
+  if (!keyOrAbbrOrName) return null;
+  
+  // 1. Coincidencia directa por clave
+  if (teams[keyOrAbbrOrName]) return teams[keyOrAbbrOrName];
+
+  // 2. Coincidencia por abreviatura
+  const keyPorAbbr = teamAbbrevMap[keyOrAbbrOrName.toUpperCase()];
+  if (keyPorAbbr && teams[keyPorAbbr]) return teams[keyPorAbbr];
+
+  // 3. Coincidencia por nombre completo o parcial
+  const clean = keyOrAbbrOrName.toLowerCase();
+  for (const key of Object.keys(teams)) {
+    const t = teams[key];
+    if (key.toLowerCase() === clean || t.name.toLowerCase().includes(clean)) {
+      return t;
+    }
+  }
+
+  return null;
+}
