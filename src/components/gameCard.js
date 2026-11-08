@@ -75,6 +75,44 @@ export function actualizarElementoOdometro(contenedor, nuevoValor) {
   });
 }
 
+export function obtenerOverlayTouchdown(game, homeTeamInfo, awayTeamInfo) {
+  const prevCount = scoringPlayCounts[game.id] || 0;
+  const currentCount = game.totalScoringPlays || 0;
+
+  if (currentCount <= prevCount || prevCount === 0 || !game.lastScoringPlay) {
+    scoringPlayCounts[game.id] = currentCount;
+    return null;
+  }
+
+  const sp = game.lastScoringPlay;
+  const isTouchdown = sp.type && String(sp.type).toLowerCase().includes('touchdown');
+
+  if (!isTouchdown) {
+    scoringPlayCounts[game.id] = currentCount;
+    return null;
+  }
+
+  const scoringTeamAbbrev = sp.team || '';
+  const isHome = scoringTeamAbbrev === game.homeAbbrev;
+  const scoringTeamInfo = isHome ? homeTeamInfo : awayTeamInfo;
+  const scoringLogo = isHome ? game.homeLogo : game.awayLogo;
+  const scoringFullName = isHome ? (game.homeFullName || game.home) : (game.awayFullName || game.away);
+  const bgColor = scoringTeamInfo.primaryColor || (isHome ? game.homeColor : game.awayColor) || '#ff6600';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'td-overlay active';
+  overlay.style.backgroundColor = bgColor;
+  overlay.innerHTML = `
+    <img src="${scoringLogo}" alt="${scoringTeamAbbrev}" class="td-logo" />
+    <div class="td-title">¡TOUCHDOWN!</div>
+    <div class="td-detail">${scoringTeamAbbrev} ${scoringFullName}</div>
+    ${sp.text ? `<div class="td-detail">${sp.text}</div>` : ''}
+  `;
+
+  scoringPlayCounts[game.id] = currentCount;
+  return overlay;
+}
+
 export function crearTarjetaPartido(game, teams, onCardClick) {
   const card = document.createElement('div');
   card.className = `game-card ${game.redZone ? 'red-zone-alert' : ''}`;
@@ -114,39 +152,9 @@ export function crearTarjetaPartido(game, teams, onCardClick) {
   // =============================================
   // PRO 3: Touchdown detection
   // =============================================
-  let touchdownOverlay = '';
-  const prevCount = scoringPlayCounts[game.id] || 0;
-  const currentCount = game.totalScoringPlays || 0;
-
-  if (currentCount > prevCount && prevCount > 0 && game.lastScoringPlay) {
-    const sp = game.lastScoringPlay;
-    const isTouchdown = sp.type && sp.type.toLowerCase().includes('touchdown');
-    
-    if (isTouchdown) {
-      // Determine which team scored
-      const scoringTeamAbbrev = sp.team || '';
-      const isHome = scoringTeamAbbrev === game.homeAbbrev;
-      const scoringTeamInfo = isHome ? homeTeamInfo : awayTeamInfo;
-      const scoringLogo = isHome ? game.homeLogo : game.awayLogo;
-      const scoringFullName = isHome ? (game.homeFullName || game.home) : (game.awayFullName || game.away);
-      const bgColor = scoringTeamInfo.primaryColor || (isHome ? game.homeColor : game.awayColor) || '#ff6600';
-
-      touchdownOverlay = `
-        <div class="td-overlay active" style="background-color: ${bgColor};">
-          <img src="${scoringLogo}" alt="${scoringTeamAbbrev}" class="td-logo" />
-          <div class="td-title">¡TOUCHDOWN!</div>
-          <div class="td-detail">${scoringTeamAbbrev} ${scoringFullName}</div>
-          ${sp.text ? `<div class="td-detail">${sp.text}</div>` : ''}
-        </div>
-      `;
-    }
-  }
-
-  // Update the count tracker
-  scoringPlayCounts[game.id] = currentCount;
+  const touchdownOverlay = obtenerOverlayTouchdown(game, homeTeamInfo, awayTeamInfo);
 
   card.innerHTML = `
-    ${touchdownOverlay}
     <div class="card-header">
       <span class="status-badge ${statusBadgeClass}">${game.statusDetail}</span>
       ${game.redZone ? '<span style="color: var(--accent-redzone); font-weight: bold;">🔴 RED ZONE</span>' : ''}
@@ -195,8 +203,8 @@ export function crearTarjetaPartido(game, teams, onCardClick) {
     </div>
   `;
 
-  // Remove TD overlay after animation completes (~5s)
   if (touchdownOverlay) {
+    card.insertBefore(touchdownOverlay, card.firstChild);
     setTimeout(() => {
       const overlay = card.querySelector('.td-overlay');
       if (overlay) overlay.remove();

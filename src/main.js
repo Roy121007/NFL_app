@@ -1,6 +1,6 @@
 import { teams, teamAbbrevMap, buscarInfoEquipo } from './data/teams.js';
 import { obtenerPartidosNFL } from './data/api.js';
-import { crearTarjetaPartido, actualizarElementoOdometro } from './components/gameCard.js';
+import { crearTarjetaPartido, actualizarElementoOdometro, obtenerOverlayTouchdown } from './components/gameCard.js';
 import { inicializarModal } from './components/gameModal.js';
 import { inicializarNavbar } from './components/navbar.js';
 import { initThemeToggle, toggleTheme, getCurrentTheme } from './utils/theme.js';
@@ -220,6 +220,19 @@ function renderizarPartidos(esAutoRefresh = false) {
             <span>${game.awayAbbrev}: ${awayWinProb}%</span>
             <span>${game.homeAbbrev}: ${homeWinProb}%</span>
           `;
+        }
+
+        const homeTeamInfo = buscarInfoEquipo(game.home) || buscarInfoEquipo(game.homeAbbrev) || (teams && teams[game.homeAbbrev]) || {};
+        const awayTeamInfo = buscarInfoEquipo(game.away) || buscarInfoEquipo(game.awayAbbrev) || (teams && teams[game.awayAbbrev]) || {};
+        const touchdownOverlay = obtenerOverlayTouchdown(game, homeTeamInfo, awayTeamInfo);
+        if (touchdownOverlay) {
+          const existingOverlay = card.querySelector('.td-overlay');
+          if (existingOverlay) existingOverlay.remove();
+          card.insertBefore(touchdownOverlay, card.firstChild);
+          setTimeout(() => {
+            const overlay = card.querySelector('.td-overlay');
+            if (overlay) overlay.remove();
+          }, 5500);
         }
 
         // 4. Red Zone
@@ -612,9 +625,9 @@ async function cargarLideresTemporada() {
     const data = await res.json();
 
     const targets = [
-      { key: 'passingYards', label: '🏈 Líderes de Pase (Passing Yards)' },
-      { key: 'rushingYards', label: '🏃 Líderes Terrestres (Rushing Yards)' },
-      { key: 'receivingYards', label: '🙌 Líderes Receptores (Receiving Yards)' }
+      { key: 'passingYards', label: 'Passing Yards Leaders' },
+      { key: 'rushingYards', label: 'Rushing Yards Leaders' },
+      { key: 'receivingYards', label: 'Receiving Yards Leaders' }
     ];
 
     const categoriasProcesadas = await Promise.all(targets.map(async target => {
