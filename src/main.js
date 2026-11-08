@@ -279,6 +279,8 @@ async function cargarPartidosPorSemana(semana = null, esAutoRefresh = false) {
     renderizarMultipantalla();
   } else if (pestañaProActual === 'redzone') {
     renderizarRedZone();
+  } else if (pestañaProActual === 'lideres') {
+    cargarLideresTemporada(semanaActual, lideresVistaActual);
   }
 }
 
@@ -571,14 +573,171 @@ async function cargarClasificaciones(modo = standingsViewMode) {
 }
 
 // ==========================================
-// PRO 4B: LÍDERES DE LA TEMPORADA (TOP 3 REALES)
+// PRO 4B: LÍDERES DE LA TEMPORADA / SEMANA ACTUAL
 // ==========================================
-async function cargarLideresTemporada() {
+let lideresVistaActual = 'season';
+const lideresSemanaCache = {};
+
+function tituloCategoriaLideres(key) {
+  const map = {
+    passingYards: 'Passing Yards',
+    rushingYards: 'Rushing Yards',
+    receivingYards: 'Receiving Yards'
+  };
+  return map[key] || key;
+}
+
+function parsearYardsLeader(displayValue) {
+  if (!displayValue) return 0;
+  const cleaned = String(displayValue).replace(/,/g, '');
+  const match = cleaned.match(/(\d+(?:\.\d+)?)\s*YDS/i) || cleaned.match(/(\d+(?:\.\d+)?)\s*yards?/i);
+  if (!match) return 0;
+  return Number(match[1]);
+}
+
+async function obtenerLideresSemana(semana) {
+  const semanaNum = Number(semana);
+  if (!Number.isFinite(semanaNum) || semanaNum < 1) return [];
+
+  const cacheKey = `week-${semanaNum}`;
+  if (lideresSemanaCache[cacheKey]) return lideresSemanaCache[cacheKey];
+
+  const scoreboardUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${semanaNum}&seasontype=2`;
+  const res = await fetch(scoreboardUrl);
+  if (!res.ok) return [];
+
+  const data = await res.json();
+  const events = data.events || [];
+  if (!events.length) {
+    lideresSemanaCache[cacheKey] = [];
+    return [];
+  }
+
+  const summaries = await Promise.all(events.map(async (event) => {
+    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${event.id}`;
+    const summaryRes = await fetch(summaryUrl);
+    if (!summaryRes.ok) return null;
+    return summaryRes.json();
+  }));
+
+  const agregados = new Map();
+  const categoriasKey = ['passingYards', 'rushingYards', 'receivingYards'];
+
+  summaries.filter(Boolean).forEach((summary) => {
+    (summary.leaders || []).forEach((teamLeader) => {
+      (teamLeader.leaders || []).forEach((category) => {
+        const rawKey = category.name || category.displayName || 'unknown';
+        const normalizedKey = categoriasKey.find(cat => rawKey.toLowerCase().includes(cat.toLowerCase())) || rawKey;
+
+        (category.leaders || []).forEach((player) => {
+          if (!player.athlete) return;
+          const athleteId = player.athlete.id || `${player.athlete.displayName}-${player.athlete.lastName || ''}`;
+          const mapKey = `${normalizedKey}-${athleteId}`;
+          const existing = agregados.get(mapKey) || {
+            name: player.athlete.displayName || player.athlete.fullName || 'Jugador NFL',
+            headshot: player.athlete.headshot?.href || 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/default.png',
+            pos: player.athlete.position?.abbreviation || 'NFL',
+            team: player.team?.abbreviation || teamLeader.team?.abbreviation || '',
+            statValue: 0,
+            category: normalizedKey
+          };
+
+          existing.statValue += parsearYardsLeader(player.displayValue || player.value || '0');
+          agregados.set(mapKey, existing);
+        });
+      });
+    });
+  });
+
+  const categorias = categoriasKey.map((categoria) => {
+    const entries = [...agregados.values()]
+      .filter(entry => entry.category === categoria)
+      .sort((a, b) => b.statValue - a.statValue)
+      .slice(0, 3)
+      .map((entry, idx) => ({
+        rank: idx + 1,
+        name: entry.name,
+        headshot: entry.headshot,
+        pos: entry.pos,
+        team: entry.team,
+        statValue: `${Math.round(entry.statValue).toLocaleString('es-MX')} YDS`
+      }));
+
+    return {
+      titulo: `${tituloCategoriaLideres(categoria)} Leaders`,
+      leaders: entries
+    };
+  });
+
+  lideresSemanaCache[cacheKey] = categorias;
+  return categorias;
+}
+
+async function cargarLideresTemporada(semana = semanaActual, vista = lideresVistaActual) {
   const container = document.getElementById('lideres-container');
   if (!container) return;
 
+  const semanaSeleccionada = Number.isFinite(Number(semana)) ? Number(semana) : (semanaActual ?? 1);
+  const esVistaSemana = vista === 'week';
+  const currentWeekNumber = Number.isFinite(Number(semanaActual)) ? Number(semanaActual) : 1;
+  const esSemanaFutura = semanaSeleccionada > currentWeekNumber;
+
+  if (esVistaSemana && esSemanaFutura) {
+    renderizarCardsLideres(container, [], {
+      titulo: `Líderes de la semana ${semanaSeleccionada}`,
+      subtitulo: 'Todavía no juegan en esta semana. Vuelve cuando haya partidos por disputarse o finalizados.',
+      scope: 'week',
+      semana: semanaSeleccionada
+    });
+    return;
+  }
+
+  if (esVistaSemana && !esSemanaFutura) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--text-secondary);">
+        <div style="font-size: 2rem; margin-bottom: 12px;">📊</div>
+        <h3>Cargando líderes de la semana ${semanaSeleccionada}...</h3>
+        <p style="font-size: 0.85rem; margin-top: 6px;">Consultando las estadísticas de la semana seleccionada.</p>
+      </div>
+    `;
+
+    try {
+      const datosSemana = await obtenerLideresSemana(semanaSeleccionada);
+      if (datosSemana.length === 0 || datosSemana.every(cat => !cat.leaders.length)) {
+        renderizarCardsLideres(container, [], {
+          titulo: `Líderes de la semana ${semanaSeleccionada}`,
+          subtitulo: 'Todavía no hay líderes publicados para esta semana.',
+          scope: 'week',
+          semana: semanaSeleccionada
+        });
+        return;
+      }
+
+      renderizarCardsLideres(container, datosSemana, {
+        titulo: `Líderes de la semana ${semanaSeleccionada}`,
+        subtitulo: 'Pase, carrera y recepción durante la semana activa.',
+        scope: 'week',
+        semana: semanaSeleccionada
+      });
+      return;
+    } catch (err) {
+      console.warn('No se pudieron cargar los líderes de la semana:', err);
+      renderizarCardsLideres(container, [], {
+        titulo: `Líderes de la semana ${semanaSeleccionada}`,
+        subtitulo: 'No hay líderes disponibles todavía para esta semana.',
+        scope: 'week',
+        semana: semanaSeleccionada
+      });
+      return;
+    }
+  }
+
   if (lideresTemporadaCache) {
     container.innerHTML = lideresTemporadaCache;
+    const toggleButtons = container.querySelectorAll('.leader-scope-btn');
+    toggleButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.scope === vista);
+    });
     return;
   }
 
@@ -590,7 +749,6 @@ async function cargarLideresTemporada() {
     </div>
   `;
 
-  // Datos verificados de respaldo para la temporada regular actual de la NFL.
   const lideresRespaldo = [
     {
       titulo: 'Passing Yards Leaders',
@@ -666,32 +824,77 @@ async function cargarLideresTemporada() {
       };
     }));
 
-    const datosFinales = categoriasProcesadas.filter(Boolean).length === 3 
-      ? categoriasProcesadas.filter(Boolean) 
+    const datosFinales = categoriasProcesadas.filter(Boolean).length === 3
+      ? categoriasProcesadas.filter(Boolean)
       : lideresRespaldo;
 
-    renderizarCardsLideres(container, datosFinales);
+    renderizarCardsLideres(container, datosFinales, {
+      titulo: 'Líderes de la Temporada NFL',
+      subtitulo: 'Top 3 de jugadores con mayor yardaje en la temporada regular (Pase, Carrera y Recepción).',
+      scope: 'season',
+      semana: semanaSeleccionada
+    });
   } catch (err) {
     console.warn('Usando datos de temporada verificados de respaldo para líderes:', err);
-    renderizarCardsLideres(container, lideresRespaldo);
+    renderizarCardsLideres(container, lideresRespaldo, {
+      titulo: 'Líderes de la Temporada NFL',
+      subtitulo: 'Top 3 de jugadores con mayor yardaje en la temporada regular (Pase, Carrera y Recepción).',
+      scope: 'season',
+      semana: semanaSeleccionada
+    });
   }
 }
 
-function renderizarCardsLideres(container, categorias) {
+function renderizarCardsLideres(container, categorias, opts = {}) {
+  const { titulo = 'Líderes de la Temporada NFL', subtitulo = 'Top 3 de jugadores con mayor yardaje en la temporada regular (Pase, Carrera y Recepción).', scope = 'season', semana = semanaActual } = opts;
+
   let html = `
-    <div style="grid-column: 1 / -1; margin-bottom: 8px;">
-      <h2>Líderes de la Temporada NFL</h2>
+    <div style="grid-column: 1 / -1; margin-bottom: 12px;">
+      <div class="standings-toggle-container" style="margin-bottom: 10px;">
+        <button class="standings-toggle-btn leader-scope-btn ${scope === 'season' ? 'active' : ''}" data-scope="season">Generales</button>
+        <button class="standings-toggle-btn leader-scope-btn ${scope === 'week' ? 'active' : ''}" data-scope="week">Semana ${semana ?? 1}</button>
+      </div>
+      <h2>${titulo}</h2>
       <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">
-        Top 3 de jugadores con mayor yardaje en la temporada regular (Pase, Carrera y Recepción).
+        ${subtitulo}
       </p>
     </div>
   `;
+
+  if (!categorias.length) {
+    html += `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+        <div style="font-size: 2.2rem; margin-bottom: 10px;">🏈</div>
+        <h3 style="margin-bottom: 8px;">${titulo}</h3>
+        <p>${subtitulo}</p>
+      </div>
+    `;
+    container.innerHTML = html;
+
+    container.querySelectorAll('.leader-scope-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        lideresVistaActual = btn.dataset.scope;
+        cargarLideresTemporada(semanaActual, lideresVistaActual);
+      });
+    });
+    return;
+  }
 
   categorias.forEach(cat => {
     html += `
       <div class="leader-card">
         <h3>${cat.titulo}</h3>
     `;
+
+    if (!cat.leaders || cat.leaders.length === 0) {
+      html += `
+        <div style="padding: 20px 0 8px; color: var(--text-secondary); font-size: 0.8rem; text-align: center;">
+          No hay líderes reportados para esta categoría.
+        </div>
+      `;
+      html += `</div>`;
+      return;
+    }
 
     cat.leaders.forEach(leader => {
       const teamLine = leader.team ? `${leader.team} • ${leader.pos}` : leader.pos;
@@ -713,8 +916,17 @@ function renderizarCardsLideres(container, categorias) {
     html += `</div>`;
   });
 
-  lideresTemporadaCache = html;
   container.innerHTML = html;
+  if (scope === 'season') {
+    lideresTemporadaCache = html;
+  }
+
+  container.querySelectorAll('.leader-scope-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      lideresVistaActual = btn.dataset.scope;
+      cargarLideresTemporada(semanaActual, lideresVistaActual);
+    });
+  });
 }
 
 // ==========================================
