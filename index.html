@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="widht=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NFL Pro-app</title>
     <link rel="stylesheet" href="./src/styles/base.css" />
     <link rel="stylesheet" href="./src/styles/navbar.css" />
@@ -15,28 +15,81 @@
       <div class="nav-container">
 
         <div class="logo">
-          <img src="https://a.espncdn.com/i/teamlogos/nfl/500/nfl.png" alt="NFL Logo" calss="nfl-logo-img" />
-          <span class=""logo-text>SCOREBOARD</span>
+          <img id="header-logo" src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png" clasa="nfl-logo-img" />
+          <span class="" logo-text>SCOREBOARD</span>
         </div>
 
         <div class="week-picker">
           <button id="prev-week-btn" class="week-arrow-btn" aria-label="Semana anterior">&lt;</button>
           <span id="current-week-label" class="week-label">Cargando...</span>
           <button id="next-week-btn" class="week-arrow-btn" aria-label="Semana siguiente">&gt;</button>
+        </div>  
 
           <!-- Selector de equipo fav, aqui se va a llenar automatico-->
-          <div class="theme-selector-container">
+        <div class="theme-selector-container">
             <label for="fav-team-select">Mi Equipo:</label>
             <select id="fav-team-select" class="fav-team-select">
               <option value="DEFAULT">NFL (Predeterminado)</option>
               <!-- Se va a llenar solo -->
             </select>
-          </div>
+        </div>
 
           <!-- Pestañas de vista principal -->
-          <ul
-        </div>
+        <ul class="nav-views">
+            <li><button id="view-games-btn" class="nav-tab active">Partidos</button></li>
+            <li><button id="view-standings-btn" class="nav-tab">Standings</button></li>
+        </ul>
+
       </div>
     </nav>
+    <!-- Barra de filtros de busqueda y header -->
+    <header class="sub-header">
+      <div class="header-container">
+        <!-- Buscador de equipos -->
+        <div class="search-box">
+          <input type="text" id="team-search-input" placeholder="Buscar equipo (ej. Patriots, Bengals)..." />
+        </div>
+
+        <!-- Botones de filtro -->
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="ALL">Todos</button>
+          <button class="filter-btn" data-filter="LIVE">En vivo</button>
+          <button class="filter-btn" data-filter="FINAL">Finalizados</button>
+          <button class="filter-btn" data-filter="UPCOMING">Próximos</button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- container principal -->
+    <main class="main-container">
+
+      <!-- Vista del tablero de patidos -->
+      <section id="games-view" class="view-section active">
+        <div id="games-grid" class="games-grid">
+          <!-- Las tarjetas de generan dinamicamente desde JS-->
+        </div>
+      </section>
+
+      <section id="standings-view" class="view-section">
+        <div id="standings-container" class="standings-container">
+          <!-- igual aqui se generan dinamicamente -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Modal de detalles del juego -->
+    <div id="game-modal" class="modal-backdrop hidden">
+      <div class="modal-content">
+        <button id="close-modal-btn" class="close-modal">&times;</button>
+        <div id="modal-body">
+          <!-- Los detalles por cuartos y stats del juego -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Script principal -->
+    <script type="module" src="./src/main.js"></script>
   </body>
 </html>

@@ -1,46 +1,143 @@
-#app {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  width: 90%;
-  max-width: 1200px;
-  margin: 20px auto;
-  font-family: system-ui, -apple-system, sans-serif;
+.navbar {
+  background-color: var(--primary-theme);
+  border-bottom: 3px solid var(--secondary-theme);
+  padding: 12px 24px;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-.game-card {
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#header-logo,
+.nfl-logo-img {
+  height: 38px !important;
+  width: 38px !important;
+  max-width: 38px !important;
+  max-height: 38px !important;
+  display: block !important;
+  object-fit: contain !important;
+  flex-shrink: 0 !important;
+}
+
+.logo-text {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+}
+
+.week-picker {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+
+.week-arrow-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.week-label {
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.theme-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.fav-team-select {
+  background-color: var(--bg-card);
+  color: #fff;
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.nav-views {
+  display: flex;
+  list-style: none;
+  gap: 8px;
+}
+
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.nav-tab.active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Sub-header de filtros */
+.sub-header {
+  background-color: #1a2234;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #1e293b;
-  color: #ffffff;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.game-card .team span{
-  background-color: #0f172a;
-  padding: 4px 10px;
+.search-box input {
+  background-color: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 8px 14px;
   border-radius: 6px;
-  color: #38bdf8;
-  font-weight: 700;
-  font-size: 1.1rem;
+  width: 260px;
 }
 
-.game-card .status{
-  font-family: 0.75rem;
-  font-weight: 700;
-  color: #94a3b8;
-  letter-spacing: 1px;
-  padding: 0 8px;
+.filter-buttons {
+  display: flex;
+  gap: 8px;
 }
 
-@media (max-width: 380px) {
-  .game-card{
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-  }
+.filter-btn {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background-color: var(--secondary-theme);
+  color: #fff;
+  border-color: var(--secondary-theme);
 }
